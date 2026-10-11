@@ -1,388 +1,425 @@
-# DeliveryETA — Modélisation Prédictive des Temps de Livraison
+# DeliveryETA — Predictive Modeling of Delivery Times
 
-## 1. Présentation du projet
+## 1. Project Overview
 
-**DeliveryETA** est un projet de Machine Learning visant à prédire le temps total nécessaire à la livraison d'une commande, depuis sa préparation jusqu'à sa réception par le client.
+**DeliveryETA** is a Machine Learning project that predicts the total time required to deliver an order, from preparation to customer receipt.
 
-L'objectif est de développer un modèle de régression capable d'estimer la durée d'une livraison en minutes à partir des caractéristiques de la commande, du livreur, des conditions météorologiques et du trafic.
+The goal is to build a regression model that estimates delivery duration (in minutes) based on order characteristics, delivery person attributes, weather conditions, and traffic density.
 
-Cette solution permet d'aider les entreprises de livraison à améliorer leurs estimations de temps d'arrivée (*Estimated Time of Arrival — ETA*), à optimiser la planification des livraisons et à mieux comprendre les facteurs qui influencent les délais.
+This solution helps delivery companies improve their Estimated Time of Arrival (ETA), optimize delivery scheduling, and better understand the factors that influence delivery times.
 
-### Objectifs métier
+### Business Objectives
 
-- Prédire le temps de livraison en minutes.
-- Fournir une estimation du délai au client.
-- Identifier les facteurs qui influencent la durée des livraisons.
-- Faciliter la planification des tournées et l'affectation des livreurs.
-- Comparer et optimiser plusieurs modèles de régression.
-- Mettre à disposition une application web interactive pour exploiter les prédictions.
+- Predict delivery time in minutes.
+- Provide customers with an estimated delivery time.
+- Identify the factors that influence delivery duration.
+- Facilitate route planning and delivery person assignment.
+- Compare and optimize multiple regression models.
+- Provide an interactive web application for real-time predictions.
 
 ---
 
-## 2. Technologies utilisées
+## 2. Technologies
 
-| Technologie | Utilisation |
+| Technology | Purpose |
 |---|---|
-| Python | Développement du projet |
-| Pandas & NumPy | Nettoyage et manipulation des données |
-| Matplotlib & Seaborn | Visualisation et analyse exploratoire |
-| Scikit-learn | Prétraitement et modélisation |
-| HistGradientBoostingRegressor | Modèle de régression retenu |
-| RandomForestRegressor | Modèle de comparaison et d'optimisation |
-| Pipeline | Regroupement du prétraitement et du modèle |
-| Joblib | Sauvegarde et chargement du modèle |
-| Streamlit | Développement de l'application web |
-| MLflow | Suivi et comparaison des expériences |
-
-Le projet peut également intégrer FastAPI et Apache Airflow pour l'exposition du modèle sous forme d'API et l'automatisation des entraînements.
+| Python | Core development language |
+| Pandas & NumPy | Data cleaning, manipulation, and feature engineering |
+| Matplotlib & Seaborn | Data visualization and exploratory analysis |
+| Scikit-learn | Preprocessing, modeling, and hyperparameter tuning |
+| HistGradientBoostingRegressor | Final selected regression model |
+| Pipeline & ColumnTransformer | End-to-end preprocessing + model pipeline |
+| RandomizedSearchCV | Hyperparameter optimization |
+| Joblib | Model serialization and loading |
+| Streamlit | Interactive web application |
 
 ---
 
 ## 3. Dataset
 
-Le projet utilise le fichier `Food delivery.csv`, qui contient un historique de livraisons avec des informations relatives aux commandes, aux livreurs, aux conditions de livraison et aux temps réellement observés.
+The project uses the file `dataset_delivery_time.csv`, which contains a historical record of deliveries with information about orders, delivery persons, delivery conditions, and actual delivery times.
 
-### Principales catégories de variables
+### Variable Categories
 
-- **Informations sur le livreur :** âge, expérience et note.
-- **Informations sur la commande :** type de commande et caractéristiques associées.
-- **Conditions de livraison :** météo, trafic et type de véhicule.
-- **Localisation :** coordonnées GPS du restaurant et du client.
-- **Variable cible :** `Time_taken(min)`.
+- **Delivery person:** age, ratings, experience.
+- **Order:** type of order, date and time of order and pickup.
+- **Delivery conditions:** weather, traffic density, vehicle type and condition, festival indicator.
+- **Location:** GPS coordinates (latitude/longitude) of the restaurant and the customer.
+- **Target variable:** `Time_taken(min)` — actual delivery time in minutes.
 
-La variable `Time_taken(min)` représente le temps réel de livraison en minutes. Elle constitue la variable cible que le modèle cherche à prédire.
+### Data Source
 
-### Source des données
-
-Fichier utilisé : `data/raw/Food delivery.csv`
+File: `data/raw/dataset_delivery_time.csv`
 
 ---
 
-## 4. Architecture du projet
+## 4. Project Structure
 
 ```text
 DeliveryETA/
 │
 ├── data/
 │   ├── raw/
-│   │   └── Food delivery.csv
+│   │   └── dataset_delivery_time.csv          # Raw dataset
 │   └── processed/
+│       ├── dataset_delivery_time_clean.csv     # Cleaned dataset
+│       ├── dataset_delivery_time_model_ready.csv  # Feature-engineered dataset
+│       └── model_comparison_results.csv        # Model comparison table
 │
 ├── notebooks/
-│   └── delivery_eta_analysis.ipynb
+│   ├── data_cleaning (2).ipynb                 # Data cleaning notebook
+│   ├── eda.ipynb                               # Exploratory data analysis
+│   └── modeling.ipynb                          # Model training and evaluation
 │
 ├── src/
-│   ├── preprocessing.py
-│   ├── feature_engineering.py
-│   ├── train.py
-│   └── evaluation.py
+│   ├── preprocessing/
+│   │   └── cleaning.py                         # DataCleaner class
+│   ├── features/
+│   │   └── engineering.py                      # Feature engineering functions
+│   └── modeling/
+│       ├── train.py                            # Model comparison pipeline
+│       └── tune.py                             # Hyperparameter tuning & final model
 │
 ├── models/
-│   └── model_final.joblib
+│   ├── model_final.joblib                      # Serialized final pipeline
+│   ├── scaler.joblib                           # Extracted StandardScaler
+│   ├── metrics.json                            # Final model metrics
+│   └── test_predictions.csv                    # Predictions on the test set
 │
 ├── app/
-│   └── streamlit_app.py
+│   ├── streamlit_app.py                        # Streamlit web application
+│   └── requirements.txt                        # Python dependencies
 │
-├── artifacts/
-│   ├── metrics.json
-│   ├── model_comparison_step3.csv
-│   └── test_predictions.csv
+├── api/                                        # Reserved for future API development
 │
-├── requirements.txt
 └── README.md
 ```
 
-*Cette structure est indicative et doit être adaptée à l'organisation réelle du dépôt Git.*
-
 ---
 
-## 5. Démarche de Machine Learning
+## 5. Architecture & Data Flow
 
-### Étape 1 — Chargement et nettoyage des données
+The project follows a sequential pipeline architecture. Each step produces an output that is consumed by the next.
 
-L'objectif est de transformer les données brutes en un jeu de données exploitable.
-
-Les opérations comprennent :
-
-- Chargement du fichier CSV avec Pandas.
-- Analyse des dimensions, des types de données et des premières observations.
-- Nettoyage des valeurs textuelles parasites.
-- Conversion des colonnes vers les types appropriés.
-- Détection et traitement des valeurs manquantes.
-- Vérification des doublons.
-- Détection des valeurs aberrantes, notamment les coordonnées GPS invalides et les durées irréalistes.
-
-Chaque décision de nettoyage doit être justifiée afin de préserver la qualité des données et d'éviter la suppression injustifiée d'informations utiles.
-
-### Étape 2 — Analyse exploratoire des données (EDA)
-
-L'analyse exploratoire permet de comprendre la distribution des variables et leur relation avec le temps de livraison.
-
-Les principales opérations sont :
-
-- Calcul des statistiques descriptives.
-- Analyse de la distribution de `Time_taken(min)`.
-- Étude des relations entre les variables explicatives et la variable cible.
-- Analyse des corrélations entre les variables numériques.
-- Comparaison des temps de livraison selon la météo, le trafic et le type de véhicule.
-- Identification des facteurs susceptibles d'influencer la durée de livraison.
-
-Les résultats de cette analyse servent à orienter les choix de prétraitement et de modélisation.
-
-### Étape 3 — Feature Engineering
-
-Le *feature engineering* consiste à créer de nouvelles variables pertinentes à partir des données existantes.
-
-Les variables dérivées comprennent notamment :
-
-- `Distance_km` : distance estimée entre le restaurant et le client à partir des coordonnées géographiques.
-- `Preparation_time_min` : durée estimée de préparation de la commande.
-- `Order_hour` : heure de la commande.
-- `Day_of_week` : jour de la semaine.
-- `Is_weekend` : indicateur permettant d'identifier les commandes passées le week-end.
-
-Ces variables permettent de représenter des facteurs opérationnels susceptibles d'influencer le temps de livraison.
-
-La pertinence des nouvelles variables doit être évaluée à partir des performances du modèle et de leur disponibilité au moment de la prédiction.
-
-### Étape 4 — Prétraitement et entraînement des modèles
-
-Le jeu de données est divisé en deux ensembles :
-
-- **80 %** pour l'entraînement.
-- **20 %** pour le test.
-
-Le prétraitement comprend l'encodage des variables catégorielles et la mise à l'échelle des variables numériques lorsque cela est pertinent pour le modèle utilisé.
-
-Plusieurs modèles de régression sont comparés sur les mêmes ensembles d'entraînement et de test, notamment :
-
-- Linear Regression
-- Decision Tree Regressor
-- Random Forest Regressor
-- HistGradientBoostingRegressor
-
-Les performances sont évaluées à l'aide de métriques adaptées à un problème de régression.
-
-L'utilisation d'un `Pipeline` scikit-learn permet de regrouper les transformations et le modèle afin de garantir la cohérence du traitement entre l'entraînement et l'inférence.
-
-### Étape 5 — Optimisation et sélection du modèle final
-
-Après la comparaison initiale, les hyperparamètres du modèle le plus prometteur sont optimisés avec une méthode telle que `RandomizedSearchCV` ou `GridSearchCV`.
-
-Les critères d'évaluation comprennent :
-
-- **MAE (Mean Absolute Error)** : erreur absolue moyenne, exprimée en minutes.
-- **MSE (Mean Squared Error)** : moyenne des erreurs quadratiques.
-- **RMSE (Root Mean Squared Error)** : racine de l'erreur quadratique moyenne, exprimée en minutes.
-- **R²** : proportion de la variabilité de la cible expliquée par le modèle.
-- **R² ajusté** : indicateur complémentaire tenant compte du nombre de variables explicatives.
-
-Les résultats obtenus sur les ensembles d'entraînement et de test sont comparés afin d'évaluer la capacité de généralisation et de détecter un éventuel surapprentissage.
-
-Le modèle final et les éléments nécessaires à l'inférence sont sauvegardés avec Joblib.
-
-### Étape 6 — Application web avec Streamlit
-
-L'application Streamlit rend le modèle accessible aux utilisateurs non techniques.
-
-Elle permet notamment de :
-
-- Saisir les caractéristiques d'une livraison.
-- Renseigner les informations disponibles sur le livreur, le trafic et la météo.
-- Fournir les informations nécessaires au calcul de la distance et des autres variables dérivées.
-- Obtenir une estimation du temps de livraison en minutes.
-- Consulter les visualisations issues de l'analyse exploratoire.
-- Afficher les métriques et les performances du modèle.
-
-L'interface doit appliquer les mêmes transformations que celles utilisées pendant l'entraînement, afin de garantir la cohérence des prédictions.
-
-### Étape 7 — Suivi des expériences avec MLflow
-
-MLflow permet de suivre et de comparer les expériences de Machine Learning.
-
-Les informations enregistrées peuvent comprendre :
-
-- Les paramètres des modèles.
-- Les hyperparamètres testés.
-- Les métriques de performance.
-- Les résultats de comparaison des modèles.
-- Les artefacts produits pendant l'entraînement.
-- Les fichiers du modèle final et les résultats de prédiction.
-
-Cette traçabilité facilite la comparaison des expériences et la reproduction des résultats.
-
----
-
-## 6. Résultats et performances
-
-Les résultats ci-dessous correspondent aux performances obtenues lors des expérimentations du projet. Les valeurs finales doivent être vérifiées à partir des artefacts générés par la dernière exécution.
-
-### Modèles comparés
-
-Les modèles de régression sont évalués sur le même ensemble de test afin de comparer leurs capacités de prédiction.
-
-### Performances des modèles retenus
-
-| Modèle | MAE (min) | RMSE (min) | R² |
-|---|---:|---:|---:|
-| HistGradientBoostingRegressor | 3,339 | 4,144 | 0,797 |
-| Random Forest optimisé | 3,107 | À renseigner | 0,8181 |
-
-Le modèle Random Forest optimisé présente une MAE plus faible et un meilleur coefficient R² dans les résultats enregistrés de cette expérimentation. La RMSE finale doit être récupérée dans les résultats correspondants avant de compléter la comparaison.
-
-### Interprétation métier
-
-Pour le modèle HistGradientBoostingRegressor, la MAE de **3,339 minutes** signifie que la prédiction s'écarte en moyenne d'environ 3,34 minutes du temps réel de livraison sur l'ensemble de test.
-
-Pour le Random Forest optimisé, la MAE de **3,107 minutes** correspond à une erreur absolue moyenne d'environ 3,11 minutes.
-
-Ces erreurs moyennes constituent des indicateurs utiles pour évaluer la précision des estimations de livraison. Elles ne garantissent toutefois pas que chaque prédiction se situera dans cet intervalle.
-
-Le coefficient R² du Random Forest optimisé est d'environ **0,8181**, ce qui indique que le modèle explique environ 81,81 % de la variabilité du temps de livraison sur l'ensemble de test, dans les conditions de cette évaluation.
-
-### Artefacts générés
-
-Les principaux fichiers de résultats comprennent :
-
-- `model_final.joblib` : modèle final sauvegardé.
-- `metrics.json` : métriques de performance.
-- `model_comparison_step3.csv` : comparaison des modèles.
-- `test_predictions.csv` : prédictions réalisées sur l'ensemble de test.
-
----
-
-## 7. Installation et exécution
-
-### Prérequis
-
-- Python et pip.
-- Git.
-- Un environnement compatible avec les dépendances du fichier `requirements.txt`.
-
-### Étape 1 — Cloner le dépôt
-
-```bash
-git clone <URL_DU_DEPOT_GITHUB>
-cd DeliveryETA
+```text
+┌───────────────────────────┐
+│  data/raw/                │
+│  dataset_delivery_time.csv│
+└─────────┬─────────────────┘
+          │
+          ▼
+┌───────────────────────────────────┐
+│  src/preprocessing/cleaning.py    │
+│  DataCleaner class                │
+│  • Text noise removal            │
+│  • Type conversion               │
+│  • Missing value imputation       │
+│  • Outlier removal (IQR)         │
+│  • Duplicate removal             │
+└─────────┬─────────────────────────┘
+          │
+          ▼
+┌───────────────────────────────────────────┐
+│  data/processed/                          │
+│  dataset_delivery_time_clean.csv          │
+└─────────┬─────────────────────────────────┘
+          │
+          ▼
+┌───────────────────────────────────┐
+│  src/features/engineering.py      │
+│  Feature engineering functions    │
+│  • Distance_km (Haversine)       │
+│  • Preparation_time_min          │
+│  • Order_hour, Day_of_week       │
+│  • Is_weekend                    │
+│  • Column selection              │
+└─────────┬─────────────────────────┘
+          │
+          ▼
+┌───────────────────────────────────────────┐
+│  data/processed/                          │
+│  dataset_delivery_time_model_ready.csv    │
+└─────────┬─────────────────────────────────┘
+          │
+          ▼
+┌───────────────────────────────────┐     ┌──────────────────────────────┐
+│  src/modeling/train.py            │     │  src/modeling/tune.py        │
+│  Compare 8 regression models     │     │  RandomizedSearchCV on       │
+│  Output: comparison table        │     │  HistGradientBoosting        │
+└─────────┬─────────────────────────┘     │  Output: final pipeline      │
+          │                               └──────────┬───────────────────┘
+          ▼                                          ▼
+┌─────────────────────────────┐     ┌──────────────────────────────┐
+│  data/processed/            │     │  models/                     │
+│  model_comparison_results.csv│    │  model_final.joblib          │
+└─────────────────────────────┘     │  scaler.joblib               │
+                                    │  metrics.json                │
+                                    │  test_predictions.csv        │
+                                    └──────────┬───────────────────┘
+                                               │
+                                               ▼
+                                    ┌──────────────────────────────┐
+                                    │  app/streamlit_app.py        │
+                                    │  Loads model_final.joblib,   │
+                                    │  metrics.json, and           │
+                                    │  test_predictions.csv        │
+                                    │  for interactive predictions │
+                                    └──────────────────────────────┘
 ```
 
-Remplacez `<URL_DU_DEPOT_GITHUB>` par l'adresse réelle de votre dépôt.
+---
 
-### Étape 2 — Créer un environnement virtuel
+## 6. Component Details
 
-Sous Windows :
+### 6.1 Data Cleaning — `src/preprocessing/cleaning.py`
+
+The `DataCleaner` class implements a full cleaning pipeline via its `run()` method:
+
+1. **Load** the raw CSV file.
+2. **Clean text noise** — strip whitespace from categorical columns, remove the `"conditions"` prefix from weather values, extract numeric values from `Time_taken(min)`.
+3. **Convert types** — cast age, ratings, and multiple deliveries to numeric; parse dates and times.
+4. **Handle missing values** — impute numeric columns with the median, categorical and time columns with the mode.
+5. **Handle outliers** — correct negative GPS coordinates (absolute value), remove rows with zero coordinates, remove `Time_taken(min)` outliers using the IQR method.
+6. **Remove duplicates** — drop duplicates (excluding the `ID` column).
+
+Output: `data/processed/dataset_delivery_time_clean.csv`
+
+### 6.2 Feature Engineering — `src/features/engineering.py`
+
+Creates derived features and selects model-ready columns:
+
+| Feature | Calculation |
+|---|---|
+| `Distance_km` | Haversine distance between restaurant and customer GPS coordinates |
+| `Preparation_time_min` | Time difference between order time and pickup time (clipped to 0–60 min) |
+| `Order_hour` | Hour extracted from order time |
+| `Day_of_week` | Day of the week (0 = Monday, 6 = Sunday) |
+| `Is_weekend` | Binary indicator (1 if Saturday or Sunday) |
+
+**Dropped columns:** `ID`, `Delivery_person_ID`, all 4 GPS coordinates, `Order_Date`, `Time_Orderd`, `Time_Order_picked`, `Delivery_person_Ratings`.
+
+Output: `data/processed/dataset_delivery_time_model_ready.csv`
+
+### 6.3 Model Training — `src/modeling/train.py`
+
+Compares **8 regression models** on the same 80/20 train/test split:
+
+| Model | Description |
+|---|---|
+| LinearRegression | Baseline linear model |
+| Ridge | L2-regularized linear regression |
+| Lasso | L1-regularized linear regression |
+| DecisionTreeRegressor | Single decision tree |
+| RandomForestRegressor | Ensemble of 200 trees |
+| ExtraTreesRegressor | Extremely randomized trees (200 estimators) |
+| GradientBoostingRegressor | Gradient boosting |
+| HistGradientBoostingRegressor | Histogram-based gradient boosting |
+
+Each model is wrapped in a `Pipeline` with a `ColumnTransformer` preprocessor:
+- **Numeric features** → `StandardScaler`
+- **Ordinal feature** (`Road_traffic_density`) → `OrdinalEncoder` with order `[Low, Medium, High, Jam]`
+- **Nominal features** → `OneHotEncoder` (binary columns dropped)
+
+Output: `data/processed/model_comparison_results.csv`
+
+### 6.4 Hyperparameter Tuning — `src/modeling/tune.py`
+
+Optimizes the **HistGradientBoostingRegressor** using `RandomizedSearchCV`:
+
+- **Search space:** `learning_rate`, `max_iter`, `max_leaf_nodes`, `max_depth`, `min_samples_leaf`, `l2_regularization`
+- **Search:** 20 iterations, 3-fold cross-validation, scored on `neg_root_mean_squared_error`
+- **Subsampling:** If the training set exceeds 8,000 rows, a random sample is used for the search to speed up tuning.
+
+After finding the best hyperparameters, the final model is trained on the full train split and evaluated on the test split. The outputs are saved to the `models/` directory.
+
+### 6.5 Streamlit Application — `app/streamlit_app.py`
+
+An interactive web interface that loads the trained model for real-time predictions.
+
+**Input fields (sidebar):**
+
+| Input | Type |
+|---|---|
+| Distance (km) | Number (0–100) |
+| Weather | Select: Sunny, Stormy, Sandstorms, Windy, Cloudy, Fog |
+| Traffic | Select: Low, Medium, High, Jam |
+| Festival | Select: No, Yes |
+| Delivery person age | Number (18–70) |
+| Vehicle condition | Slider (0–3) |
+| Vehicle type | Select: motorcycle, scooter, electric_scooter, bicycle |
+| Multiple deliveries | Number (0–3) |
+| City | Select: Urban, Metropolitian, Semi-Urban |
+| Preparation time (min) | Number (0–120) |
+| Order hour | Slider (0–23) |
+| Order date | Date picker |
+| Order type | Select: Drinks, Buffet, Meal, Snack |
+
+**Application tabs:**
+
+| Tab | Content |
+|---|---|
+| Données | List of all features used by the model |
+| Métriques | MAE, RMSE, R² test, R² adjusted, R² train, overfitting analysis, best hyperparameters |
+| Précision | First 20 test predictions with actual vs. predicted values and error analysis |
+
+---
+
+## 7. Results & Performance
+
+### Model Comparison (Initial Training)
+
+All 8 models evaluated on the same test set, sorted by MAE:
+
+| Model | MAE (min) | RMSE (min) | R² test | R² train |
+|---|---:|---:|---:|---:|
+| HistGradientBoosting | 3.339 | 4.144 | 0.7966 | 0.8085 |
+| RandomForest | 3.393 | 4.260 | 0.7850 | 0.9702 |
+| ExtraTrees | 3.475 | 4.403 | 0.7703 | 1.0000 |
+| GradientBoosting | 3.869 | 4.865 | 0.7196 | 0.7229 |
+| DecisionTree | 4.474 | 5.820 | 0.5988 | 1.0000 |
+| LinearRegression | 5.140 | 6.441 | 0.5086 | 0.5155 |
+| Ridge | 5.140 | 6.441 | 0.5086 | 0.5155 |
+| Lasso | 5.146 | 6.448 | 0.5075 | 0.5147 |
+
+### Final Optimized Model (HistGradientBoosting)
+
+After hyperparameter tuning with `RandomizedSearchCV`:
+
+| Metric | Value |
+|---|---:|
+| MAE | 3.336 min |
+| RMSE | 4.142 min |
+| R² test | 0.7968 |
+| R² adjusted (test) | 0.7961 |
+| R² train | 0.8076 |
+| Number of features | 27 |
+| Training samples | 33,364 |
+| Test samples | 8,342 |
+
+**Best hyperparameters:**
+
+| Parameter | Value |
+|---|---:|
+| learning_rate | 0.05 |
+| max_iter | 100 |
+| max_depth | 10 |
+| max_leaf_nodes | 50 |
+| min_samples_leaf | 10 |
+| l2_regularization | 0.1 |
+
+### Interpretation
+
+- The **MAE of 3.34 minutes** means predictions deviate on average by about 3.3 minutes from the actual delivery time.
+- The **R² of ~0.80** indicates the model explains approximately 80% of the variance in delivery times.
+- The **small gap between R² train (0.808) and R² test (0.797)** confirms the model generalizes well without significant overfitting.
+
+### Saved Artifacts
+
+| File | Description |
+|---|---|
+| `models/model_final.joblib` | Serialized sklearn Pipeline (preprocessor + model) |
+| `models/scaler.joblib` | Extracted StandardScaler from the pipeline |
+| `models/metrics.json` | Final model metrics and best hyperparameters |
+| `models/test_predictions.csv` | Actual vs. predicted values on the test set |
+
+---
+
+## 8. Installation & Setup
+
+### Prerequisites
+
+- Python 3.10+
+- pip
+- Git
+
+### Step 1 — Clone the Repository
+
+```bash
+git clone https://github.com/abderrazakerrifaouy/DeliveryETA-.git
+cd DeliveryETA-
+```
+
+### Step 2 — Create a Virtual Environment
+
+**Windows:**
 
 ```bash
 python -m venv .venv
 .venv\Scripts\activate
 ```
 
-Sous Linux :
+**Linux / macOS:**
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-### Étape 3 — Installer les dépendances
+### Step 3 — Install Dependencies
 
 ```bash
 python -m pip install --upgrade pip
-pip install -r requirements.txt
+pip install -r app/requirements.txt
 ```
 
-### Étape 4 — Lancer l'application Streamlit
+### Step 4 — Run the Data Pipeline (Optional)
 
-Si le fichier d'entrée est `app/streamlit_app.py` :
+If you want to regenerate the processed data and retrain the model from scratch:
 
 ```bash
-python -m streamlit run app/streamlit_app.py
+# Step 1: Clean the raw data
+python -m src.preprocessing.cleaning
+
+# Step 2: Generate features
+python -m src.features.engineering
+
+# Step 3: Compare models
+python -m src.modeling.train
+
+# Step 4: Tune and save the final model
+python -m src.modeling.tune
 ```
 
-Si le fichier est situé à un autre emplacement, adaptez la commande à la structure réelle du projet.
+> **Note:** The `models/` directory already contains a pre-trained model. Steps above are only needed if you want to retrain.
 
-L'application est généralement accessible à l'adresse :
-
-http://localhost:8501
-
-### Étape 5 — Suivre les expériences avec MLflow
-
-Si MLflow est configuré avec un serveur local sur le port 5000 :
+### Step 5 — Launch the Streamlit Application
 
 ```bash
-python -m mlflow server --host 127.0.0.1 --port 5000 --workers 1
+streamlit run app/streamlit_app.py
 ```
 
-Ouvrez ensuite :
-
-http://127.0.0.1:5000
-
-L'URI de tracking configurée dans le code d'entraînement doit correspondre à l'adresse du serveur utilisé.
+The application will be available at: **http://localhost:8501**
 
 ---
 
-## 8. Captures d'écran
+## 9. Limitations & Future Improvements
 
-Ajoutez des captures d'écran réelles de l'application Streamlit et des résultats du projet.
+### Limitations
 
-### Interface de prédiction
+- Prediction quality depends on the representativeness of the historical data.
+- Real-world traffic conditions and unforeseen events can affect delivery times in ways the model cannot capture.
+- Test set performance does not guarantee identical results in production.
+- Tree-based models (ExtraTrees, DecisionTree) show signs of overfitting (R² train = 1.0), confirming HistGradientBoosting as the better choice.
+- The model should be periodically retrained to account for data drift.
 
-![Interface de prédiction](docs/screenshots/streamlit-prediction.png)
+### Future Improvements
 
-### Analyse exploratoire
-
-![Analyse exploratoire](docs/screenshots/eda.png)
-
-### Comparaison des modèles
-
-![Comparaison des modèles](docs/screenshots/model-comparison.png)
-
-### Suivi des expériences MLflow
-
-![Suivi MLflow](docs/screenshots/mlflow-tracking.png)
-
-Les chemins des images sont des exemples. Créez le dossier `docs/screenshots/` et placez-y les captures correspondantes pour qu'elles s'affichent sur GitHub.
+- Enrich the dataset with real-time traffic data.
+- Expose the model via a REST API (FastAPI) in the `api/` directory.
+- Add unit and integration tests.
+- Set up a CI/CD pipeline.
+- Implement model monitoring in production.
+- Add experiment tracking (e.g., MLflow).
 
 ---
 
-## 9. Limites et perspectives d'amélioration
+## 10. Author & Context
 
-### Limites
+**Project:** DeliveryETA — Predictive Modeling of Delivery Times  
+**Instructor:** Hamid OUFAKIR  
+**Brief creation date:** 17/09/2026  
+**Planned period:** 21/09/2026 – 25/09/2026  
+**Certification:** RNCP — AI Developer  
+**Type:** Individual project
 
-- La qualité des prédictions dépend de la qualité et de la représentativité des données historiques.
-- Les conditions réelles de circulation et les imprévus peuvent influencer les temps de livraison.
-- Les performances observées sur l'ensemble de test ne garantissent pas les mêmes résultats en production.
-- Certaines variables calculées doivent être disponibles au moment de la prédiction.
-- Les résultats doivent être réévalués régulièrement pour détecter une éventuelle dérive des données.
-
-### Perspectives d'amélioration
-
-- Enrichir le dataset avec des données de circulation plus précises.
-- Améliorer les variables géographiques et temporelles.
-- Ajouter une API FastAPI pour exposer le modèle.
-- Automatiser le réentraînement avec Apache Airflow.
-- Renforcer les tests unitaires et les tests d'intégration.
-- Mettre en place une pipeline CI/CD.
-- Surveiller les performances du modèle après son déploiement.
-
----
-
-## 10. Auteur et contexte pédagogique
-
-**Projet :** DeliveryETA — Modélisation Prédictive des Temps de Livraison  
-**Formateur / référent :** Hamid OUFAKIR  
-**Date de création du brief :** 17/09/2026  
-**Période de réalisation prévue :** du 21/09/2026 au 25/09/2026  
-**Formation / référentiel :** Certification RNCP Développeur·se en Intelligence Artificielle  
-**Type de travail :** Individuel
-
-**Dépôt GitHub :** À compléter  
-**Lien Jira :** À compléter
-
----
-
-## Conclusion
-
-DeliveryETA met en œuvre un processus complet de Machine Learning pour estimer les temps de livraison à partir de données historiques. De la préparation des données au feature engineering, en passant par la comparaison et l'optimisation des modèles, le projet aboutit à une application Streamlit permettant de consulter les prédictions et les performances du modèle.
-
-L'intégration de MLflow apporte une meilleure traçabilité des expériences et facilite l'évolution du modèle. L'ensemble constitue une base pour une solution d'estimation des délais de livraison destinée à accompagner la prise de décision opérationnelle.
+**GitHub Repository:** [DeliveryETA-](https://github.com/abderrazakerrifaouy/DeliveryETA-)
